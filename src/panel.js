@@ -116,6 +116,7 @@ const addLearnHowFBCWorksButton = async (fragment) => {
 
   button = addFullWidthButton(fragment, "open-allowed-sites");
   addSpan(button, "sites-added-subhead");
+
 };
 
 
@@ -293,11 +294,11 @@ const buildPanel = async(panelId) => {
     addLearnMoreLink(contentWrapper);
   }
 
+  addSiteListingButton(contentWrapper);
   addLearnHowFBCWorksButton(fragment);
   getLocalizedStrings();
   appendFragmentAndSetHeight(page, fragment);
   page.id = panelId;
-
   const onboardingLinks = document.querySelectorAll(".open-onboarding");
   const allowedSitesLink = document.querySelector(".open-allowed-sites");
   allowedSitesLink.addEventListener("click", () => buildAllowedSitesPanel("sites-allowed"));
@@ -411,6 +412,8 @@ const buildAllowedSitesPanel = async(panelId) => {
   addSubhead(contentWrapper, "sites-added");
   addParagraph(contentWrapper, "sites-added-p1");
 
+  addSiteListingButton(fragment);
+
   const listsWrapper = addDiv(fragment, "site-lists-wrapper");
   addLightSubhead(listsWrapper, "sites-included");
   makeSiteList(listsWrapper, defaultAllowedSites);
@@ -432,6 +435,11 @@ const buildAllowedSitesPanel = async(panelId) => {
     });
   });
 
+  addOnboardingListeners(panelId);
+  getLocalizedStrings();
+};
+
+const addSiteListingButton = async (fragment) => {
   // below are the modifications to allow whitelisting specific domains
   const tabsQueryResult = await browser.tabs.query({currentWindow: true, active: true});
   const currentActiveTab = tabsQueryResult[0];
@@ -439,6 +447,7 @@ const buildAllowedSitesPanel = async(panelId) => {
   const currentActiveFavIcon = currentActiveTab.favIconUrl;
  
   thisHostname = currentActiveURL.hostname;
+
   button = document.createElement("button");
   button.classList.add("highlight-on-hover");
   icon = document.createElement("img");
@@ -447,25 +456,36 @@ const buildAllowedSitesPanel = async(panelId) => {
   icon["height"]=16;
   icon["style"]["marginRight"]="10px";
   button.appendChild(icon);
-  span = document.createElement("span");
-  innerText = "Add " + thisHostname + " to Facebook Container"; // not translated
-  span["innerText"]=innerText;
+
+  let contentWrapper = addDiv(fragment, "fw-bottom-btn");
+  const added = await browser.runtime.sendMessage("what-sites-are-added");
+
+  if (added.includes(thisHostname)) {
+    span = document.createElement("span");
+    innerText = "Remove " + thisHostname + " from Facebook Container";
+    span["innerText"]=innerText;
+    button.addEventListener("click", async() => {
+      await browser.runtime.sendMessage( {removeDomain: thisHostname} );
+      browser.tabs.reload();
+      window.close();
+    });
+  } else {
+    span = document.createElement("span");
+    innerText = "Add " + thisHostname + " to Facebook Container"; // not translated
+    span["innerText"]=innerText;
+    button.addEventListener("click", async() => {
+      const fbcStorage = await browser.storage.local.get();
+      fbcStorage.domainsAddedToFacebookContainer.push(thisHostname);
+      await browser.storage.local.set({"domainsAddedToFacebookContainer": fbcStorage.domainsAddedToFacebookContainer});
+      //await browser.runtime.sendMessage(thisHostname);
+      browser.tabs.reload();
+      window.close();
+    });
+  }
   button.appendChild(span);
-
-  button.addEventListener("click", async() => {
-    const fbcStorage = await browser.storage.local.get();
-    fbcStorage.domainsAddedToFacebookContainer.push(thisHostname);
-    await browser.storage.local.set({"domainsAddedToFacebookContainer": fbcStorage.domainsAddedToFacebookContainer});
-    browser.tabs.reload();
-    window.close();
-  });
-
-  listsWrapper.appendChild(button);
-
-  addOnboardingListeners(panelId);
-  getLocalizedStrings();
+  contentWrapper.appendChild(button);
+  return contentWrapper;
 };
-
 
 const buildRemoveSitePanel = (siteName) => {
   const panelId = "remove-site";
