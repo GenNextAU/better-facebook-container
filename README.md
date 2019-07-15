@@ -1,4 +1,6 @@
-# Facebook Container
+# Better Facebook Container
+
+## A fork of Mozilla's Facebook Container, with the added benefit of being able to whitelist websites to allow access to Facebook domains.
 
 **Prevent Facebook from tracking your visits to other websites**
 

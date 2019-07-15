@@ -1,7 +1,7 @@
 {
     "manifest_version": 2,
-    "name": "Facebook Container",
-    "version": "2.0.1",
+    "name": "Better Facebook Container",
+    "version": "2.0.2",
 
     "default_locale": "en",
 
@@ -14,17 +14,17 @@
 
     "applications": {
       "gecko": {
-        "id": "@contain-facebook",
+        "id": "@better-facebook-container",
         "strict_min_version": "57.0"
       }
     },
 
-    "homepage_url": "https://github.com/mozilla/contain-facebook",
+    "homepage_url": "https://github.com/GenNextAU/better-facebook-container",
 
     "browser_action": {
         "browser_style": true,
         "default_icon": "/img/fbc-icon2.svg",
-        "default_title": "Facebook Container",
+        "default_title": "Better Facebook Container",
         "default_popup": "panel.html",
         "theme_icons": [
             {
