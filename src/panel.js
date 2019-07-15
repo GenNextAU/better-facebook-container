@@ -399,7 +399,6 @@ const makeSiteList = async(fragment, siteList, sitesAllowed=false, addX=false) =
   }
 };
 
-
 const buildAllowedSitesPanel = async(panelId) => {
   const { page, fragment } = setUpPanel(panelId);
 
@@ -430,6 +429,36 @@ const buildAllowedSitesPanel = async(panelId) => {
       buildRemoveSitePanel(removeButton.dataset.sitename);
     });
   });
+
+  // below are the modifications to allow whitelisting specific domains
+  const tabsQueryResult = await browser.tabs.query({currentWindow: true, active: true});
+  const currentActiveTab = tabsQueryResult[0];
+  const currentActiveURL = new URL(currentActiveTab.url);
+  const currentActiveFavIcon = currentActiveTab.favIconUrl;
+ 
+  thisHostname = currentActiveURL.hostname;
+  button = document.createElement("button");
+  button.classList.add("highlight-on-hover");
+  icon = document.createElement("img");
+  icon["src"]=currentActiveFavIcon;
+  icon["width"]=16;
+  icon["height"]=16;
+  icon["style"]["marginRight"]="10px";
+  button.appendChild(icon);
+  span = document.createElement("span");
+  innerText = "Add " + thisHostname + " to Facebook Container"; // not translated
+  span["innerText"]=innerText;
+  button.appendChild(span);
+
+  button.addEventListener("click", async() => {
+    const fbcStorage = await browser.storage.local.get();
+    fbcStorage.domainsAddedToFacebookContainer.push(thisHostname);
+    await browser.storage.local.set({"domainsAddedToFacebookContainer": fbcStorage.domainsAddedToFacebookContainer});
+    browser.tabs.reload();
+    window.close();
+  });
+
+  listsWrapper.appendChild(button);
 
   addOnboardingListeners(panelId);
   getLocalizedStrings();
